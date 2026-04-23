@@ -6,6 +6,8 @@ import * as fs from "fs";
 
 const VIEW_TYPE_TERMINAL = "minimal-terminal-view";
 
+const IS_FLATPAK = process.platform === "linux" && fs.existsSync("/.flatpak-info");
+
 function longestCommonPrefix(strs: string[]): string {
   if (strs.length === 0) return "";
   let prefix = strs[0];
@@ -197,9 +199,19 @@ class TerminalView extends ItemView {
     }
 
     const shell = process.env.SHELL || (process.platform === "win32" ? "cmd.exe" : "/bin/sh");
-    const shellFlag = process.platform === "win32" ? "/c" : "-c";
+    const shellFlag = process.platform === "win32" ? "/c" : "-lc";
 
-    const child = spawn(shell, [shellFlag, cmd], {
+    let bin: string;
+    let args: string[];
+    if (IS_FLATPAK) {
+      bin = "flatpak-spawn";
+      args = ["--host", `--directory=${this.cwd}`, shell, shellFlag, cmd];
+    } else {
+      bin = shell;
+      args = [shellFlag, cmd];
+    }
+
+    const child = spawn(bin, args, {
       cwd: this.cwd,
       env: process.env,
     });
