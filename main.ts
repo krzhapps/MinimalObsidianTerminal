@@ -231,6 +231,13 @@ export default class MinimalTerminalPlugin extends Plugin {
       callback: () => this.activate(),
     });
 
+    this.addCommand({
+      id: "toggle-terminal",
+      name: "Toggle terminal",
+      hotkeys: [{ modifiers: ["Mod", "Shift"], key: "`" }],
+      callback: () => this.toggle(),
+    });
+
     this.addRibbonIcon("terminal-square", "Open terminal", () => this.activate());
   }
 
@@ -259,5 +266,15 @@ export default class MinimalTerminalPlugin extends Plugin {
 
     const view = leaf.view;
     if (view instanceof TerminalView) view.focusInput();
+  }
+
+  private toggle() {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
+    if (existing.length === 0) {
+      this.activate();
+      return;
+    }
+    for (const leaf of existing) leaf.detach();
   }
 }

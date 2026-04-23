@@ -12,6 +12,8 @@ If you need full interactive programs (`vim`, `htop`, password prompts), use the
 - Command history via `Up` / `Down`
 - `Ctrl+C` sends `SIGINT` to the running process
 - `Ctrl+L` or `clear` clears the output
+- `Tab` completes file and directory paths relative to the current working directory (supports `~` and absolute paths)
+- **Toggle terminal** command (default `Ctrl/Cmd+Shift+` `` ` ``) shows or hides the pane
 - stderr shown in red, exit codes shown after each command
 - Styled with Obsidian theme variables — adapts to light/dark themes automatically
 
@@ -56,6 +58,8 @@ Runs esbuild in watch mode. After each change, trigger **Reload app without savi
 | `Up` / `Down` | Navigate command history |
 | `Ctrl+C` | Send `SIGINT` to the running process |
 | `Ctrl+L` | Clear the output |
+| `Tab` | Complete file/directory paths |
+| `Ctrl/Cmd+Shift+` `` ` `` | Toggle the terminal pane (show/hide) |
 
 ## How it works
 
