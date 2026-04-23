@@ -2,8 +2,21 @@ import { ItemView, Plugin, WorkspaceLeaf } from "obsidian";
 import { spawn, ChildProcess } from "child_process";
 import * as os from "os";
 import * as path from "path";
+import * as fs from "fs";
 
 const VIEW_TYPE_TERMINAL = "minimal-terminal-view";
+
+function longestCommonPrefix(strs: string[]): string {
+  if (strs.length === 0) return "";
+  let prefix = strs[0];
+  for (let i = 1; i < strs.length; i++) {
+    while (!strs[i].startsWith(prefix)) {
+      prefix = prefix.slice(0, -1);
+      if (prefix === "") return "";
+    }
+  }
+  return prefix;
+}
 
 class TerminalView extends ItemView {
   private outputEl!: HTMLElement;
@@ -80,7 +93,65 @@ class TerminalView extends ItemView {
     } else if (e.key === "l" && e.ctrlKey) {
       e.preventDefault();
       this.outputEl.empty();
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      this.complete();
     }
+  }
+
+  private complete() {
+    const value = this.inputEl.value;
+    const caret = this.inputEl.selectionStart ?? value.length;
+    const before = value.slice(0, caret);
+    const after = value.slice(caret);
+
+    // Find start of the current token (last whitespace before the caret).
+    const tokenStart = Math.max(
+      before.lastIndexOf(" "),
+      before.lastIndexOf("\t"),
+    ) + 1;
+    const token = before.slice(tokenStart);
+
+    // Split into directory part and the prefix we're completing.
+    const slashIdx = token.lastIndexOf("/");
+    const dirPart = slashIdx >= 0 ? token.slice(0, slashIdx + 1) : "";
+    const prefix = slashIdx >= 0 ? token.slice(slashIdx + 1) : token;
+
+    // Resolve the directory to read, honoring ~ and relative paths.
+    const expanded = dirPart.replace(/^~(?=\/|$)/, os.homedir());
+    const dirAbs = path.isAbsolute(expanded)
+      ? (expanded || "/")
+      : path.resolve(this.cwd, expanded || ".");
+
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dirAbs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    const matches = entries.filter((d) => d.name.startsWith(prefix));
+    if (matches.length === 0) return;
+
+    let completion: string;
+    if (matches.length === 1) {
+      const m = matches[0];
+      completion = m.name + (m.isDirectory() ? "/" : " ");
+    } else {
+      const common = longestCommonPrefix(matches.map((m) => m.name));
+      if (common.length > prefix.length) {
+        completion = common;
+      } else {
+        this.append(matches.map((m) => m.name + (m.isDirectory() ? "/" : "")).join("  ") + "\n");
+        return;
+      }
+    }
+
+    const newToken = dirPart + completion;
+    const newBefore = value.slice(0, tokenStart) + newToken;
+    this.inputEl.value = newBefore + after;
+    const pos = newBefore.length;
+    this.inputEl.setSelectionRange(pos, pos);
   }
 
   private append(text: string, cls?: string) {
