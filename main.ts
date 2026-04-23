@@ -6,6 +6,8 @@ import * as fs from "fs";
 
 const VIEW_TYPE_TERMINAL = "minimal-terminal-view";
 
+const IS_FLATPAK = process.platform === "linux" && fs.existsSync("/.flatpak-info");
+
 function longestCommonPrefix(strs: string[]): string {
   if (strs.length === 0) return "";
   let prefix = strs[0];
@@ -197,9 +199,19 @@ class TerminalView extends ItemView {
     }
 
     const shell = process.env.SHELL || (process.platform === "win32" ? "cmd.exe" : "/bin/sh");
-    const shellFlag = process.platform === "win32" ? "/c" : "-c";
+    const shellFlag = process.platform === "win32" ? "/c" : "-lc";
 
-    const child = spawn(shell, [shellFlag, cmd], {
+    let bin: string;
+    let args: string[];
+    if (IS_FLATPAK) {
+      bin = "flatpak-spawn";
+      args = ["--host", `--directory=${this.cwd}`, shell, shellFlag, cmd];
+    } else {
+      bin = shell;
+      args = [shellFlag, cmd];
+    }
+
+    const child = spawn(bin, args, {
       cwd: this.cwd,
       env: process.env,
     });
@@ -231,6 +243,13 @@ export default class MinimalTerminalPlugin extends Plugin {
       callback: () => this.activate(),
     });
 
+    this.addCommand({
+      id: "toggle-terminal",
+      name: "Toggle terminal",
+      hotkeys: [{ modifiers: ["Mod", "Shift"], key: "`" }],
+      callback: () => this.toggle(),
+    });
+
     this.addRibbonIcon("terminal-square", "Open terminal", () => this.activate());
   }
 
@@ -259,5 +278,15 @@ export default class MinimalTerminalPlugin extends Plugin {
 
     const view = leaf.view;
     if (view instanceof TerminalView) view.focusInput();
+  }
+
+  private toggle() {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
+    if (existing.length === 0) {
+      this.activate();
+      return;
+    }
+    for (const leaf of existing) leaf.detach();
   }
 }
