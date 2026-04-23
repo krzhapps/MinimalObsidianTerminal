@@ -1,0 +1,65 @@
+.mot-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-monospace);
+  font-size: 13px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+.mot-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
+.mot-output .mot-cmd {
+  color: var(--text-accent);
+}
+
+.mot-output .mot-err {
+  color: var(--text-error);
+}
+
+.mot-output .mot-exit-ok {
+  color: var(--text-muted);
+}
+
+.mot-output .mot-exit-bad {
+  color: var(--text-error);
+}
+
+.mot-input-row {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--background-modifier-border);
+  padding: 4px 8px;
+  gap: 6px;
+}
+
+.mot-prompt {
+  color: var(--text-accent);
+  user-select: none;
+}
+
+.mot-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-normal);
+  font-family: inherit;
+  font-size: inherit;
+  padding: 4px 0;
+}
+
+.mot-cwd {
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
