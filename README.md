@@ -63,9 +63,21 @@ Runs esbuild in watch mode. After each change, trigger **Reload app without savi
 
 ## How it works
 
-Commands are executed with `child_process.spawn($SHELL, ['-c', cmd])`. Output streams are appended to a `<pre>` element; stderr is styled separately. The working directory is tracked in the plugin (not the shell), so `cd` is intercepted and applied to subsequent `spawn` calls via the `cwd` option.
+Commands are executed with `child_process.spawn($SHELL, ['-lc', cmd])` (login shell, so your profile sets `PATH` etc.). Output streams are appended to a `<pre>` element; stderr is styled separately. The working directory is tracked in the plugin (not the shell), so `cd` is intercepted and applied to subsequent `spawn` calls via the `cwd` option.
 
 On Windows the shell falls back to `cmd.exe /c`.
+
+### Flatpak Obsidian
+
+If Obsidian is running as a Flatpak (detected via `/.flatpak-info`), commands are wrapped with `flatpak-spawn --host` so they run on the host system instead of inside the sandbox. Otherwise host binaries like `gh`, `git` credential helpers, or anything outside the runtime would be invisible to the shell.
+
+This requires the Flatpak to be allowed to talk to the host portal. Grant it once:
+
+```bash
+flatpak override --user --talk-name=org.freedesktop.Flatpak md.obsidian.Obsidian
+```
+
+Then fully quit and relaunch Obsidian. Without this override you'll see `Portal call failed: org.freedesktop.DBus.Error.ServiceUnknown` from `flatpak-spawn`.
 
 ## License
 
