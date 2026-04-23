@@ -60,6 +60,11 @@ class TerminalView extends ItemView {
     this.current?.kill();
   }
 
+  focusInput() {
+    // Defer so focus wins against Obsidian's own layout/focus pass.
+    setTimeout(() => this.inputEl?.focus(), 0);
+  }
+
   private onKey(e: KeyboardEvent) {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -241,14 +246,18 @@ export default class MinimalTerminalPlugin extends Plugin {
   private async activate() {
     const { workspace } = this.app;
 
+    let leaf: WorkspaceLeaf;
     const existing = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
     if (existing.length > 0) {
-      workspace.revealLeaf(existing[0]);
-      return;
+      leaf = existing[0];
+    } else {
+      leaf = workspace.getLeaf("split", "horizontal");
+      await leaf.setViewState({ type: VIEW_TYPE_TERMINAL, active: true });
     }
-
-    const leaf = workspace.getLeaf("split", "horizontal");
-    await leaf.setViewState({ type: VIEW_TYPE_TERMINAL, active: true });
     workspace.revealLeaf(leaf);
+    workspace.setActiveLeaf(leaf, { focus: true });
+
+    const view = leaf.view;
+    if (view instanceof TerminalView) view.focusInput();
   }
 }
