@@ -24,10 +24,19 @@ If you need full interactive programs (`vim`, `htop`, password prompts), use the
 - **No stdin to running processes.** Once a command is running, you can only send `SIGINT`, not additional input.
 
 ## Installation
-
-### From this repo (development)
-
 This plugin lives inside the vault at `.obsidian/plugins/MinimalObsidianTerminal`.
+
+If `make` is available you can install and build dependencies with:
+
+```bash
+make all
+```
+```
+```
+```
+```
+
+Or run the steps individually if make isn't available:
 
 ```bash
 npm install
